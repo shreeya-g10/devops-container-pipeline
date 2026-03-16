@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -18,26 +19,44 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
 
       - name: Run tests
-        run: pytest
+        run: |
+          pytest
+
 
   docker-build:
     needs: test
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t calculator-app .
+        run: |
+          docker build -t calculator-app .
 
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Tag Docker image
-        run: docker tag calculator-app shreeya987/calculator-app
+        run: |
+          docker tag calculator-app shreeya987/calculator-app:latest
 
       - name: Push Docker image
-        run: docker push shreeya987/calculator-app
+        run: |
+          docker push shreeya987/calculator-app:latest
+
+      - name: Create build artifact
+        run: |
+          zip -r build-package.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: build-package.zip
